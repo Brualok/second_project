@@ -60,3 +60,41 @@ static void print_line(off_t offset, const unsigned char* data, size_t len,
 
     putchar('\n');
 }
+int hexdump_file(const char* filename, off_t offset, size_t size,
+    int group_size, int count_per_line) 
+{
+    FILE* file = fopen(filename, "rb");
+    if (!file) 
+    {
+        perror("fopen");
+        return -1;
+    }
+    if (fseek(file, 0, SEEK_END) != 0) 
+    {
+        perror("fseek");
+        fclose(file);
+        return -1;
+    }
+    long file_size = ftell(file);
+    if (file_size < 0) 
+    {
+        perror("ftell");
+        fclose(file);
+        return -1;
+    }
+    rewind(file);
+    if (offset >= file_size) 
+    {
+        fclose(file);
+        return 0;
+    }
+
+    if (fseek(file, offset, SEEK_SET) != 0) 
+    {
+        perror("fseek");
+        fclose(file);
+        return -1;
+    }
+    fclose(file);
+    return 0;
+}
