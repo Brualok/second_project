@@ -48,6 +48,15 @@ static void print_line(off_t offset, const unsigned char* data, size_t len,
         if (i + group_size < len)
             putchar(' ');
     }
+    if (group_size == 1) 
+    {
+        printf(" | ");
+        for (i = 0; i < len; ++i) 
+        {
+            unsigned char c = data[i];
+            putchar(isprint(c) ? c : '.');
+        }
+    }
 
     putchar('\n');
 }
