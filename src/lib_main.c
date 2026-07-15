@@ -140,3 +140,44 @@ int hexdump_file(const char* filename, off_t offset, size_t size,
     fclose(file);
     return 0;
 }
+int hexdump_directory(const char* dirname, off_t offset, size_t size,
+    int group_size, int count_per_line) 
+{
+    DIR* dir = opendir(dirname);
+    if (!dir) 
+    {
+        perror("opendir");
+        return -1;
+    }
+
+    struct dirent* entry;
+    struct stat st;
+    char path[PATH_MAX];
+
+    while ((entry = readdir(dir)) != NULL) 
+    {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue;
+
+        snprintf(path, sizeof(path), "%s/%s", dirname, entry->d_name);
+
+        if (stat(path, &st) != 0) 
+        {
+            perror("stat");
+            continue;
+        }
+
+        
+        if (S_ISREG(st.st_mode))
+        {
+            printf("\n===== %s =====\n", path);
+            if (hexdump_file(path, offset, size, group_size, count_per_line) != 0) 
+            {
+                fprintf(stderr, "Îרטבךא ןנט גûגמהו פאיכא %s\n", path);
+            }
+        }
+    }
+
+    closedir(dir);
+    return 0;
+}
