@@ -16,25 +16,34 @@
 /* Преобразование одного байта в два шестнадцатеричных символа */
 static void byte_to_hex(unsigned char b, char out[2]) {
     static const char hexchars[] = "0123456789ABCDEF";
-    out[0] = hexchars[b >> 4];
-    out[1] = hexchars[b & 0x0F];
+    out[0] = hexchars[b >> 4];   //Сдвиг вправо для получения младшего
+    out[1] = hexchars[b & 0x0F]; //Получение старшего
 }
+
+/*Статическая функция для вывода двоичных данных в удобочитаемом виде
+off_t offset — текущее смещение (адрес) в файле или буфере данных, с которого начинается вывод строки.
+const unsigned char* data — указатель на массив данных, которые нужно вывести.
+size_t len — количество байт для вывода (длина)
+int group_size — размер группы байт в шестнадцатеричном блоке
+int count_per_line — общее количество байт, выводимое на одну строку*/
 static void print_line(off_t offset, const unsigned char* data, size_t len,
     int group_size, int count_per_line) 
 {
-    printf("%08x ", (unsigned int)offset);
+    printf("%08x ", (unsigned int)offset); 
 
     size_t i, j;
     for (i = 0; i < len; i += group_size) 
     {
-        size_t chunk_len = group_size;
+        size_t chunk_len = group_size; //chunk_len — сколько байт реально есть в текущей группе 
         if (i + chunk_len > len)
             chunk_len = len - i;
-        for (j = 0; j < (size_t)(group_size - chunk_len); ++j) 
+        for (j = 0; j < (size_t)(group_size - chunk_len); ++j) // group_size - chunk_len — сколько байт не хватает до полной группы.
         {
-            putchar('0');
-            putchar('0');
+            putchar('0'); //Ведущие нули
+            putchar('0'); //Ведущие нули
         }
+
+        /*Вывод байт в обратном порядке litle endian*/
         for (j = chunk_len; j > 0; --j) 
         {
             unsigned char b = data[i + j - 1];
@@ -61,19 +70,19 @@ static void print_line(off_t offset, const unsigned char* data, size_t len,
 int hexdump_file(const char* filename, off_t offset, size_t size,
     int group_size, int count_per_line) 
 {
-    FILE* file = fopen(filename, "rb");
+    FILE* file = fopen(filename, "rb"); //открываем файл в режиме бинарного чтения
     if (!file) 
     {
         perror("fopen");
         return -1;
     }
-    if (fseek(file, 0, SEEK_END) != 0) 
+    if (fseek(file, 0, SEEK_END) != 0) //Перемещаем указатель в самый конец файла 
     {
         perror("fseek");
         fclose(file);
         return -1;
     }
-    long file_size = ftell(file);
+    long file_size = ftell(file); //Текущая позиция указателя в файле (получим размер файла в байтах)
     if (file_size < 0) 
     {
         perror("ftell");
@@ -87,17 +96,19 @@ int hexdump_file(const char* filename, off_t offset, size_t size,
         return 0;
     }
 
-    if (fseek(file, offset, SEEK_SET) != 0) 
+    if (fseek(file, offset, SEEK_SET) != 0) //Перемещаем указатель
     {
         perror("fseek");
         fclose(file);
         return -1;
     }
     size_t remaining; // Нужное количество байт для считывания
-    if (size == (size_t)-1) {
+    if (size == (size_t)-1) 
+    {
         remaining = (size_t)(file_size - offset); // Оставшиеся байты после offset
     }
-    else {
+    else 
+    {
         remaining = size;
         if (remaining > (size_t)(file_size - offset)) // Если в файле меньше байт чем нужно считать  
             remaining = (size_t)(file_size - offset); // Считаем до конца файла
@@ -105,8 +116,9 @@ int hexdump_file(const char* filename, off_t offset, size_t size,
 
     off_t current_offset = offset;
     size_t line_bytes = (size_t)group_size * count_per_line;
-    unsigned char* buffer = malloc(line_bytes);
-    if (!buffer) {
+    unsigned char* buffer = malloc(line_bytes); //выделяем память для буффера 
+    if (!buffer) 
+    {
         perror("malloc");
         fclose(file);
         return -1;
