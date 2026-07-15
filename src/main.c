@@ -21,7 +21,8 @@ static void print_usage(const char* prog_name)
 }
 
 
-int main (int argc, char *argv[]) {
+int main (int argc, char *argv[]) 
+{
 
 	int opt;
 	char* filename = NULL;
@@ -98,5 +99,21 @@ int main (int argc, char *argv[]) {
 				return EXIT_FAILURE;
 		}
 	}
+	if (dirname != NULL) {
+		if (hexdump_directory(dirname, offset, size, group_size, count_per_line) != 0)
+			return EXIT_FAILURE;
+	}
+	else if (filename != NULL) {
+		if (hexdump_file(filename, offset, size, group_size, count_per_line) != 0)
+			return EXIT_FAILURE;
+	}
+	else {
+		fprintf(stderr, "Необходимо указать либо -i, либо -d.\n");
+		print_usage(argv[0]);
+		return EXIT_FAILURE;
+	}
 
+	return EXIT_SUCCESS;
 }
+
+
