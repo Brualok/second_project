@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "hexdump.h"
+#include "lib_main.h"
 #include "getopt.h"
 
 
@@ -28,92 +28,126 @@ int main (int argc, char *argv[])
 	char* filename = NULL;
 	char* dirname = NULL;
 	off_t offset = 0;
-	size_t size = (size_t)-1;   /* -1 означает "до конца файла" */
+	size_t size = (size_t)-1;   // -1 означает "до конца файла" 
 	int group_size = 1;
 	int count_per_line = 16;
-	while ((opt = getopt (argc, argv, "hi:i:o:l:g:n:d")) != -1) 
-	{
-		switch (opt)
-		{
-			case 'h':
-				printf ("Usage: %s -i -o -l -g -n -f\n", argv[0]);
-				break;
+	//while ((opt = getopt (argc, argv, "i:o:l:g:n:d")) != -1) 
+	//{
+	//	switch (opt)
+	//	{
+	//		case 'i':
+	//			filename = optarg;
+	//			break;
 
-			case 'i':
-				filename = optarg;
-				break;
-
-			case 'o': 
-			{
-				char* endptr;
-				offset = strtoll(optarg, &endptr, 0);
-				if (*endptr != '\0' || offset < 0) 
-				{
-					fprintf(stderr, "Неверное значение смещения: %s\n", optarg);
-					return EXIT_FAILURE;
-				}
-				break;
+	//		case 'o': 
+	//		{
+	//			char* endptr;
+	//			offset = strtoll(optarg, &endptr, 0);
+	//			if (*endptr != '\0' || offset < 0) 
+	//			{
+	//				fprintf(stderr, "Неверное значение смещения: %s\n", optarg);
+	//				return EXIT_FAILURE;
+	//			}
+	//			break;
+	//		}
+	//		case 'l': 
+	//		{
+	//			char* endptr;
+	//			long val = strtol(optarg, &endptr, 0);
+	//			/* разрешаем -1 (означает весь файл) */
+	//			if (*endptr != '\0' || val < -1) 
+	//			{
+	//				fprintf(stderr, "Неверный размер: %s\n", optarg);
+	//				return EXIT_FAILURE;
+	//			}
+	//			size = (size_t)val;  // если val == -1, то size станет (size_t)-1
+	//			break;
+	//		}
+	//		case 'g': 
+	//		{
+	//			char* endptr;
+	//			long val = strtol(optarg, &endptr, 0);
+	//			if (*endptr != '\0' || val <= 0) 
+	//			{
+	//				fprintf(stderr, "Неверный размер кусочка: %s\n", optarg);
+	//				return EXIT_FAILURE;
+	//			}
+	//			group_size = (int)val;
+	//			break;
+	//		}
+	//		case 'n': 
+	//		{
+	//			char* endptr;
+	//			long val = strtol(optarg, &endptr, 0);
+	//			if (*endptr != '\0' || val <= 0) 
+	//			{
+	//				fprintf(stderr, "Неверное количество кусочков в строке: %s\n", optarg);
+	//				return EXIT_FAILURE;
+	//			}
+	//			count_per_line = (int)val;
+	//			break;
+	//		}
+	//		case 'd':
+	//			dirname = optarg;
+	//			break;
+	//		default:
+	//			print_usage(argv[0]);
+	//			return EXIT_FAILURE;
+	//	}
+	//}
+	while ((opt = getopt(argc, argv, "i:o:l:g:n:d:f:")) != -1) {
+		switch (opt) {
+		case 'i':
+			filename = optarg;
+			break;
+		case 'o':
+			if (sscanf(optarg, "%ld", &offset) != 1) {
+				fprintf(stderr, "Error: Option -o requires an integer argument.\n");
+				return 1;
 			}
-			case 'l': 
-			{
-				char* endptr;
-				long val = strtol(optarg, &endptr, 0);
-				/* разрешаем -1 (означает весь файл) */
-				if (*endptr != '\0' || val < -1) 
-				{
-					fprintf(stderr, "Неверный размер: %s\n", optarg);
-					return EXIT_FAILURE;
-				}
-				size = (size_t)val;  // если val == -1, то size станет (size_t)-1
-				break;
+			break;
+		case 'l':
+			if (sscanf(optarg, "%lld", &size) != 1) {
+				fprintf(stderr, "Error: Option -l requires an integer argument.\n");
+				return 1;
 			}
-			case 'g': 
-			{
-				char* endptr;
-				long val = strtol(optarg, &endptr, 0);
-				if (*endptr != '\0' || val <= 0) 
-				{
-					fprintf(stderr, "Неверный размер кусочка: %s\n", optarg);
-					return EXIT_FAILURE;
-				}
-				group_size = (int)val;
-				break;
+			break;
+		case 'g':
+			if (sscanf(optarg, "%d", &group_size) != 1) {
+				fprintf(stderr, "Error: Option -g requires an integer argument.\n");
+				return 1;
 			}
-			case 'n': 
-			{
-				char* endptr;
-				long val = strtol(optarg, &endptr, 0);
-				if (*endptr != '\0' || val <= 0) 
-				{
-					fprintf(stderr, "Неверное количество кусочков в строке: %s\n", optarg);
-					return EXIT_FAILURE;
-				}
-				count_per_line = (int)val;
-				break;
+			break;
+		case 'n':
+			if (sscanf(optarg, "%d", &count_per_line) != 1) {
+				fprintf(stderr, "Error: Option -n requires an integer argument.\n");
+				return 1;
 			}
-			case 'd':
-				dirname = optarg;
-				break;
-			default:
-				print_usage(argv[0]);
-				return EXIT_FAILURE;
+			break;
+		case 'd':
+			dirname = optarg;
+			break;
+		default:
+			fprintf(stderr, "Error: invalid arguments.\n");
+			return 1;
 		}
 	}
+
 	if (dirname != NULL) {
 		if (hexdump_directory(dirname, offset, size, group_size, count_per_line) != 0)
-			return EXIT_FAILURE;
+			return 1;
 	}
-	else if (filename != NULL) {
+	if (filename != NULL) {
 		if (hexdump_file(filename, offset, size, group_size, count_per_line) != 0)
-			return EXIT_FAILURE;
+			return 1;
 	}
 	else {
-		fprintf(stderr, "Необходимо указать либо -i, либо -d.\n");
+		fprintf(stderr, "Needed -i, or -d.\n");
 		print_usage(argv[0]);
-		return EXIT_FAILURE;
+		return 1;
 	}
 
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 

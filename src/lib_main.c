@@ -4,16 +4,14 @@
 Терземан Андрей Александрович
 МК-101
 */
-#include "hexdump.h"
+#include "lib_main.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <errno.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <limits.h>
-#include <unistd.h>
+
 
 /* Преобразование одного байта в два шестнадцатеричных символа */
 static void byte_to_hex(unsigned char b, char out[2]) {
@@ -82,7 +80,7 @@ int hexdump_file(const char* filename, off_t offset, size_t size,
         fclose(file);
         return -1;
     }
-    rewind(file);
+    rewind(file); // Возвращает курсор в начало ФАЙЛА
     if (offset >= file_size) 
     {
         fclose(file);
@@ -95,14 +93,14 @@ int hexdump_file(const char* filename, off_t offset, size_t size,
         fclose(file);
         return -1;
     }
-    size_t remaining;
+    size_t remaining; // Нужное количество байт для считывания
     if (size == (size_t)-1) {
-        remaining = (size_t)(file_size - offset);
+        remaining = (size_t)(file_size - offset); // Оставшиеся байты после offset
     }
     else {
         remaining = size;
-        if (remaining > (size_t)(file_size - offset))
-            remaining = (size_t)(file_size - offset);
+        if (remaining > (size_t)(file_size - offset)) // Если в файле меньше байт чем нужно считать  
+            remaining = (size_t)(file_size - offset); // Считаем до конца файла
     }
 
     off_t current_offset = offset;
@@ -115,7 +113,7 @@ int hexdump_file(const char* filename, off_t offset, size_t size,
     }
 
     while (remaining > 0) {
-        size_t to_read = line_bytes;
+        size_t to_read = line_bytes; //Сколько надо прочитать
         if (to_read > remaining)
             to_read = remaining;
 
@@ -129,8 +127,7 @@ int hexdump_file(const char* filename, off_t offset, size_t size,
             return -1;
         }
 
-        print_line(current_offset, buffer, read_count,
-            group_size, count_per_line);
+        print_line(current_offset, buffer, read_count, group_size, count_per_line);
 
         current_offset += read_count;
         remaining -= read_count;
@@ -173,7 +170,7 @@ int hexdump_directory(const char* dirname, off_t offset, size_t size,
             printf("\n===== %s =====\n", path);
             if (hexdump_file(path, offset, size, group_size, count_per_line) != 0) 
             {
-                fprintf(stderr, "Ошибка при выводе файла %s\n", path);
+                perror("error of output file");
             }
         }
     }

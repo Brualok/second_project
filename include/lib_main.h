@@ -4,8 +4,8 @@
 Терземан Андрей Александрович
 МК-101
 */
-#ifndef HEXDUMP_H
-#define HEXDUMP_H
+#pragma once 
+
 
 #include <stdio.h>
 #include <stddef.h>
@@ -19,4 +19,4 @@ int hexdump_directory(const char* dirname, off_t offset, size_t size,
     int group_size, int count_per_line);
 
 
-#endif
+
